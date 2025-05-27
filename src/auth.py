@@ -1,15 +1,72 @@
 from flask import Blueprint, render_template
+from flask import Flask, request, redirect, render_template, session
+from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3
 
 auth = Blueprint('auth', __name__)
 
-@auth.route('/login')
-def login():
-    return render_template("login.html")
 
-@auth.route('/signup')
+# Function to access the database
+def get_db():
+    conn = sqlite3.connect('database.db')
+    return conn
+
+# Signup route
+@auth.route('/signup', methods=['GET', 'POST'])
 def signup():
-    return render_template("signup.html")
+    if request.method == 'POST': 
+        # On a POST request, process the form submission
+        username = request.form['username']
+        password = generate_password_hash(request.form['password'])
+        conn = get_db()
 
+        try:
+            # Try to insert user into DB if it's a new user
+            conn.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", (username, password))
+            conn.commit()
+        except:
+            return "Username already exists"
+        return redirect('/login')
+
+    # On a GET request, simply show the form
+    return render_template('signup.html') 
+
+# Login route
+@auth.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST': 
+        # On a POST request, process the form submission
+        username = request.form['username']
+        password = request.form['password']
+
+        # Lookup the user
+        conn = get_db()
+        # Fetchone returns a single row
+        user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+
+        # Ensure password matches user, using hashcode
+        if user and check_password_hash(user[2], password):
+            # Store the session in a cookie
+            session['user_id'] = user[0]
+            return redirect('/home')
+
+        # On an invalide password
+        return "Invalid login"
+
+    # On a GET request, just show the login form
+    return render_template('login.html')
+
+# Logout route
 @auth.route('/logout')
 def logout():
-    return "<p>Logout</p>"
+    session.clear()
+    return redirect('/login')
+
+@auth.route('/home')
+def home():
+    if 'user_id' in session:
+        return render_template('home.html')
+    return redirect('/login')
+
+if __name__ == '__main__':
+    auth.run(debug=True)
