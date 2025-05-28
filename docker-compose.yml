@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+    flask:
+        build: .
+        ports:
+            - "5001:5000"
+        volumes:
+            - .:/app
+        environment:
+            - FLASK_APP=src/main.py
+            - FLASK_ENV=development
+            - FLASK_RUN_HOST=0.0.0.0
