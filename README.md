@@ -13,4 +13,9 @@ Install Dependencies
 
 Run
 
+    cd src
     python main.py
+
+## New: Docker Setup
+
+    docker-compose up --build
