@@ -18,6 +18,7 @@ Install Dependencies
 
 Run
 
+    cd src
     python main.py
 
 Add to .env
