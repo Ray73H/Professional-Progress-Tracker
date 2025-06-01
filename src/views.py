@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for
+from flask_login import login_required, current_user
 
 views = Blueprint('views', __name__)
 
@@ -44,8 +45,9 @@ dummy_tasks = [
     ]
 
 @views.route('/')
-def home():
-    return render_template("index.html")
+@login_required
+def dashboard():
+    return render_template("dashboard.html")
 
 @views.route('/job', methods=['GET','POST'])
 def jobs():
