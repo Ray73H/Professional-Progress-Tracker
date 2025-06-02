@@ -4,6 +4,24 @@ from src.database import db
 
 views = Blueprint('views', __name__)
 
+"""
+Functions needed:
+    get_job
+    get_jobs
+    create_job
+    delete_job
+
+    get_project
+    get_projects
+    create_project
+    delete_project
+
+    get_tasks
+    get_task
+    create_task
+    delete_task
+"""
+
 ### JOBS
 @views.route('/')
 @login_required
