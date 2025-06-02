@@ -8,7 +8,7 @@ from src.models.models import User
 from flask_login import LoginManager
 from views import views
 from auth import auth
-from database import get_db
+from database import db
 
 def create_app():
     app = Flask(__name__)
@@ -21,7 +21,7 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         try:
-            with get_db() as conn:
+            with db() as conn:
                 with conn.cursor() as cur:
                     cur.execute("SELECT id, username FROM users WHERE id = %s", (user_id,))
                     user_record = cur.fetchone()

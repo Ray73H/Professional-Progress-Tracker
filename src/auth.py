@@ -2,7 +2,7 @@ from flask import Blueprint, request, redirect, render_template, session
 from flask_login import login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.models.models import User
-from database import get_db
+from database import db
 import psycopg2
 
 auth = Blueprint('auth', __name__)
@@ -15,7 +15,7 @@ def signup():
         password = generate_password_hash(request.form['password'])
 
         try:
-            with get_db() as conn:
+            with db() as conn:
                 with conn.cursor() as cur:
                     cur.execute(
                         "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
@@ -43,7 +43,7 @@ def login():
         user_record = None
 
         try:
-            with get_db() as conn:
+            with db() as conn:
                 with conn.cursor() as cur:
                     cur.execute("SELECT id, password_hash FROM users WHERE username = %s", (username,))
                     user_record = cur.fetchone()

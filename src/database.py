@@ -1,7 +1,7 @@
 import psycopg2
 import os
 
-def get_db():
+def db():
     return psycopg2.connect(
         dbname=os.getenv("DATABASE_NAME"),
         user=os.getenv("USER_NAME"),
