@@ -1,72 +1,64 @@
-from flask import Blueprint, render_template
-from flask import Flask, request, redirect, render_template, session
+from flask import Blueprint, request, redirect, render_template, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
+from flask_login import login_user, logout_user, login_required
+from sqlalchemy import text
+from src.database import db
+from src.models.models import User
 
 auth = Blueprint('auth', __name__)
-
-
-# Function to access the database
-def get_db():
-    conn = sqlite3.connect('database.db')
-    return conn
 
 # Signup route
 @auth.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST': 
-        # On a POST request, process the form submission
+        print("Signup form submitted:", request.form)
         username = request.form['username']
         password = generate_password_hash(request.form['password'])
-        conn = get_db()
 
         try:
-            # Try to insert user into DB if it's a new user
-            conn.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", (username, password))
-            conn.commit()
-        except:
-            return "Username already exists"
-        return redirect('/login')
-
-    # On a GET request, simply show the form
-    return render_template('signup.html') 
+            db.session.execute(
+                text("INSERT INTO users (username, password_hash) VALUES (:username, :password_hash)"),
+                {"username": username, "password_hash": password}
+            )
+            db.session.commit()
+            return redirect('/login')
+        except Exception as e:
+            db.session.rollback()
+            print("Signup failed:", str(e))
+            return "Error: " + str(e) 
+    
+    return render_template('signup.html')
 
 # Login route
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST': 
-        # On a POST request, process the form submission
+    if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
 
-        # Lookup the user
-        conn = get_db()
-        # Fetchone returns a single row
-        user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+        try:
+            result = db.session.execute(
+                text("SELECT * FROM users WHERE username = :username"),
+                {"username": username}
+            )
+            user_row = result.fetchone()
+        except Exception as e:
+            print("Login failed:", str(e))
+            return "Error: " + str(e) 
 
-        # Ensure password matches user, using hashcode
-        if user and check_password_hash(user[2], password):
-            # Store the session in a cookie
-            session['user_id'] = user[0]
-            return redirect('/home')
+        if user_row and check_password_hash(user_row.password_hash, password):
+            user = db.session.get(User, user_row.id)
+            login_user(user)
+            return redirect('/')
+        else:
+            print("Invalid login credentials")
+            return render_template('login.html')
 
-        # On an invalide password
-        return "Invalid login"
-
-    # On a GET request, just show the login form
     return render_template('login.html')
 
 # Logout route
 @auth.route('/logout')
+@login_required
 def logout():
-    session.clear()
+    logout_user()
     return redirect('/login')
-
-@auth.route('/home')
-def home():
-    if 'user_id' in session:
-        return render_template('home.html')
-    return redirect('/login')
-
-if __name__ == '__main__':
-    auth.run(debug=True)

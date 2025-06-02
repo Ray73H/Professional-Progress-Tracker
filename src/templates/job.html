@@ -4,9 +4,9 @@
 
 	<div class="mb-4">
 		<button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#addProject">Add Project</button>
-		<button class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#addTask">
+		<!-- <button class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#addTask">
 			Add Task/Accomplishment
-		</button>
+		</button> -->
 	</div>
 
 	<div class="collapse mb-4" id="addProject">
@@ -22,7 +22,7 @@
 			<button type="submit" class="btn btn-success">Save Project</button>
 		</form>
 	</div>
-	<div class="collapse mb-4" id="addTask">
+	<!-- <div class="collapse mb-4" id="addTask">
 		<form method="POST" action="{{ url_for('views.add_task', job_id=job.id) }}">
 			<div class="mb-3">
 				<label class="form-label">Task/Accomplishment Title</label>
@@ -34,7 +34,7 @@
 			</div>
 			<button type="submit" class="btn btn-success">Save Task/Accomplishment</button>
 		</form>
-	</div>
+	</div> -->
 
 	<div class="mb-5">
 		<h3>Projects</h3>
@@ -52,13 +52,13 @@
 					{% endif %}
 				</a>
 				<div class="ms-3">
-					<a
+					<!-- <a
 						href="{{ url_for('views.edit_project', project_id=project.id) }}"
 						class="btn btn-sm btn-outline-primary"
 						>Edit</a
-					>
+					> -->
 					<a
-						href="{{ url_for('views.delete_project', project_id=project.id) }}"
+						href="{{ url_for('views.remove_project', project_id=project.id) }}"
 						class="btn btn-sm btn-outline-danger"
 						>Delete</a
 					>
@@ -71,7 +71,7 @@
 		{% endif %}
 	</div>
 
-	<div>
+	<!-- <div>
 		<h3>Tasks / Accomplishments</h3>
 		{% if tasks %}
 		<div class="list-group">
@@ -97,6 +97,6 @@
 		{% else %}
 		<p>No tasks or accomplishments added yet.</p>
 		{% endif %}
-	</div>
+	</div> -->
 </div>
 {% endblock %}

@@ -1,93 +1,155 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, current_app, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
+from src.database import db
 
 views = Blueprint('views', __name__)
 
-dummy_job = {
-        "id": 1,
-        "title": "Software Development Job at Tech Solutions Inc."
-    }
-
-dummy_projects = [
-        {
-            "id": 101,
-            "title": "Project Alpha",
-            "description": "Develop the core authentication module."
-        },
-        {
-            "id": 102,
-            "title": "Project Beta",
-            "description": "Integrate third-party payment gateway."
-        },
-        {
-            "id": 103,
-            "title": "Project Gamma",
-            "description": "Design and implement the new UI/UX."
-        }
-    ]
-
-dummy_tasks = [
-        {
-            "id": 201,
-            "title": "Task: User registration feature",
-            "description": "Completed user sign-up and login forms."
-        },
-        {
-            "id": 202,
-            "title": "Accomplishment: Optimized database queries",
-            "description": "Reduced query time by 30% for key operations."
-        },
-        {
-            "id": 203,
-            "title": "Task: API documentation",
-            "description": "Wrote comprehensive docs for all public API endpoints."
-        }
-    ]
-
+### JOBS
 @views.route('/')
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    user_jobs = get_jobs();
+    return render_template("dashboard.html", jobs=user_jobs)
 
-@views.route('/job', methods=['GET','POST'])
-def jobs():
-    if request.method == 'POST':
-        pass
-    return render_template("job.html", job=dummy_job, projects=dummy_projects, tasks=dummy_tasks)
+@views.route('/add_job')
+@login_required
+def add_job():
+    name = request.form.get('name')
+    description = request.form.get('description', '')
+    position = request.form.get('position')
 
-@views.route('/add_project/<int:job_id>', methods=['POST'])
-def add_project(job_id):
-    return redirect(url_for('views.jobs'))
-
-@views.route('/add_task', methods=['POST'])
-def add_task():
-    job_id = request.args.get("job_id")
-    project_id = request.args.get("project_id")
-    if project_id:
-        return redirect(url_for('views.view_project'))
-    return redirect(url_for('views.jobs'))
-
-@views.route('/project/<int:project_id>')
-def view_project(project_id):
-    project = next((p for p in dummy_projects if p["id"] == project_id), None)
-
-    if project is None:
-        return redirect(url_for('views.home'))
+    if not name or not position:
+        flash('Project name and position is required.', 'warning')
+    else:
+        try:
+            create_job(name, description, position)
+            flash(f'Job created"!', 'success')
+        except Exception as e:
+            current_app.logger.error(f"Error adding Job: {e}")
+            flash('Failed to add job. An unexpected error occurred.', 'danger')
     
-    return render_template("project.html", project=project, tasks=dummy_tasks)
+    return redirect(url_for('views.dashboard'))
 
-@views.route('/edit_project/<int:project_id>', methods=['GET', 'POST'])
-def edit_project(project_id):
-    return redirect(url_for('views.jobs'))
+@views.route('/remove_job/<int:job_id>', methods=['GET'])
+@login_required
+def remove_job(job_id):
+    job = get_job(job_id, current_user.id)
+    if not job:
+        flash("Job not found or not authorized.", "danger")
+        return redirect(url_for('views.dashboard'))
 
-@views.route('/delete_project/<int:project_id>', methods=['GET'])
-def delete_project(project_id):
-    return redirect(url_for('views.jobs'))
+    try:
+        delete_job(job_id)
+        flash("Job deleted successfully.", "success")
+    except Exception as e:
+        current_app.logger.error(f"Error deleting job {job_id}: {e}")
+        flash("Failed to delete job. Please try again later.", "danger")
 
-@views.route('/edit_task/<int:task_id>', methods=['GET', 'POST'])
-def edit_task(task_id):
-    return redirect(url_for('views.jobs'))
+    return redirect(url_for('views.dashboard'))
 
-@views.route('/delete_task/<int:task_id>', methods=['GET'])
-def delete_task(task_id):
-    return redirect(url_for('views.jobs'))
+### PROJECTS
+@views.route('/job/<int:job_id>')
+@login_required
+def view_job(job_id):
+    job = get_job(job_id, current_user.id)
+    if not job:
+        flash('Job not found or not authorized.', 'danger')
+        return redirect(url_for('views.dashboard'))
+
+    projects = get_projects(job_id)
+    return render_template("job.html", job=job, projects=projects)
+
+@views.route('/job/<int:job_id>/add_project', methods=['POST'])
+@login_required
+def add_project(job_id):
+    job = get_job(job_id, current_user.id)
+    if not job:
+        flash('Job not found or not authorized.', 'danger')
+        return redirect(url_for('views.dashboard'))
+
+    name = request.form.get('name')
+    description = request.form.get('description', '')
+
+    if not name:
+        flash('Project name is required.', 'warning')
+    else:
+        try:
+            create_project(job_id, name, description)
+            flash(f'Project "{name}" added successfully to job "{job.title}"!', 'success')
+        except Exception as e:
+            current_app.logger.error(f"Error adding project to job {job_id}: {e}")
+            flash('Failed to add project. An unexpected error occurred.', 'danger')
+    
+    return redirect(url_for('views.view_job', job_id=job_id))
+
+@views.route('/remove_project/<int:project_id>', methods=['GET'])
+@login_required
+def remove_project(project_id):
+    project = get_project(project_id, current_user.id)
+    if not project:
+        flash("Project not found or not authorized.", "danger")
+        return redirect(request.referrer or url_for('views.dashboard'))
+
+    job_id = project.job_id
+    try:
+        delete_project(project_id)
+        flash("Project deleted successfully.", "success")
+    except Exception as e:
+        current_app.logger.error(f"Error deleting project {project_id}: {e}")
+        flash("Failed to delete project. Please try again later.", "danger")
+
+    return redirect(url_for('views.view_job', job_id=job_id) or url_for('views.dashboard'))
+
+### TASKS
+@views.route('/project/<int:project_id>')
+@login_required
+def view_project(project_id):
+    project = get_project(project_id, current_user.id)
+    if not project:
+        flash('Project not found or not authorized.', 'danger')
+        return redirect(request.referrer or url_for('views.dashboard'))
+    
+    tasks = get_tasks(project_id)
+    return render_template("project.html", project=project, tasks=tasks)
+
+@views.route('/project/<int:project_id>/add_task', methods=['POST'])
+@login_required
+def add_task(project_id):
+    project = get_project(project_id, current_user.id)
+    if not project:
+        flash('Project not found or not authorized.', 'danger')
+        return redirect(request.referrer or url_for('views.dashboard'))
+
+    title = request.form.get('title')
+    description = request.form.get('description', '')
+
+    if not title:
+        flash('Task title is required.', 'warning')
+        return redirect(request.referrer or url_for('views.view_project', project_id=project_id))
+
+    try:
+        create_task(project_id, title, description)
+        flash(f'Task "{title}" added successfully.', 'success')
+    except Exception as e:
+        current_app.logger.error(f"Error adding task to project {project_id}: {e}")
+        flash('Failed to add task. An unexpected error occurred.', 'danger')
+
+    return redirect(url_for('views.view_project', project_id=project_id))
+
+@views.route('/remove_task/<int:task_id>', methods=['GET'])
+@login_required
+def remove_task(task_id):
+    task = get_task(task_id, current_user.id)
+    if not task:
+        flash("Task not found or not authorized.", "danger")
+        return redirect(request.referrer or url_for('views.dashboard'))
+
+    project_id = task.project_id
+    try:
+        delete_task(task_id)
+        flash("Task deleted successfully.", "success")
+    except Exception as e:
+        current_app.logger.error(f"Error deleting task {task_id}: {e}")
+        flash("Failed to delete task. Please try again later.", "danger")
+
+    return redirect(url_for('views.view_project', project_id=project_id) or url_for('views.dashboard'))
