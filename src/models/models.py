@@ -2,17 +2,25 @@ from datetime import datetime
 from src.database import db
 from flask_login import UserMixin
 
-class User(UserMixin, db.Model):
-    __tablename__ = 'users'
+class User(UserMixin):
+    def __init__(self, id, username):
+        self.id = id
+        self.username = username
+
+    def get_id(self):
+        return str(self.id)
+
+# class User(UserMixin, db.Model):
+#     __tablename__ = 'users'
     
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+#     id = db.Column(db.Integer, primary_key=True)
+#     username = db.Column(db.String(80), unique=True, nullable=False)
+#     email = db.Column(db.String(120), unique=True, nullable=False)
+#     password_hash = db.Column(db.String(128), nullable=False)
+#     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
-    jobs = db.relationship('Job', backref='user', lazy=True, cascade='all, delete-orphan')
+#     # Relationships
+#     jobs = db.relationship('Job', backref='user', lazy=True, cascade='all, delete-orphan')
 
 class Job(db.Model):
     __tablename__ = 'jobs'
