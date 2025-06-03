@@ -7,31 +7,51 @@ from datetime import datetime
 def get_job(job_id: int, user_id: int) -> Optional[Dict[str, Any]]:
     """Get a specific job for a user."""
     sql = text("""
-        SELECT id, name, description, position, created_at, user_id
+        SELECT id, name as title, description, position, created_at, user_id
         FROM jobs
         WHERE id = :job_id AND user_id = :user_id
     """)
     result = db.session.execute(sql, {"job_id": job_id, "user_id": user_id})
     row = result.fetchone()
-    return dict(row) if row else None
+    if row:
+        return {
+            'id': row[0],
+            'title': row[1],
+            'description': row[2],
+            'position': row[3],
+            'created_at': row[4],
+            'user_id': row[5]
+        }
+    return None
 
 def get_jobs(user_id: int) -> List[Dict[str, Any]]:
     """Get all jobs for a user."""
     sql = text("""
-        SELECT id, name, description, position, created_at, user_id
+        SELECT id, name as title, description, position, created_at, user_id
         FROM jobs
         WHERE user_id = :user_id
         ORDER BY created_at DESC
     """)
     result = db.session.execute(sql, {"user_id": user_id})
-    return [dict(row) for row in result]
+    jobs = []
+    for row in result:
+        job_dict = {
+            'id': row[0],
+            'title': row[1],
+            'description': row[2],
+            'position': row[3],
+            'created_at': row[4],
+            'user_id': row[5]
+        }
+        jobs.append(job_dict)
+    return jobs
 
 def create_job(name: str, description: str, position: str, user_id: int) -> Dict[str, Any]:
     """Create a new job."""
     sql = text("""
         INSERT INTO jobs (name, description, position, user_id, created_at)
         VALUES (:name, :description, :position, :user_id, :created_at)
-        RETURNING id, name, description, position, created_at, user_id
+        RETURNING id, name as title, description, position, created_at, user_id
     """)
     result = db.session.execute(sql, {
         "name": name,
@@ -41,7 +61,15 @@ def create_job(name: str, description: str, position: str, user_id: int) -> Dict
         "created_at": datetime.utcnow()
     })
     db.session.commit()
-    return dict(result.fetchone())
+    row = result.fetchone()
+    return {
+        'id': row[0],
+        'title': row[1],
+        'description': row[2],
+        'position': row[3],
+        'created_at': row[4],
+        'user_id': row[5]
+    }
 
 def delete_job(job_id: int, user_id: int) -> bool:
     """Delete a job and all its related projects and tasks."""
@@ -86,7 +114,15 @@ def get_project(project_id: int, user_id: int) -> Optional[Dict[str, Any]]:
     """)
     result = db.session.execute(sql, {"project_id": project_id, "user_id": user_id})
     row = result.fetchone()
-    return dict(row) if row else None
+    if row:
+        return {
+            'id': row[0],
+            'name': row[1],
+            'description': row[2],
+            'created_at': row[3],
+            'job_id': row[4]
+        }
+    return None
 
 def get_projects(job_id: int) -> List[Dict[str, Any]]:
     """Get all projects for a job."""
@@ -97,7 +133,17 @@ def get_projects(job_id: int) -> List[Dict[str, Any]]:
         ORDER BY created_at DESC
     """)
     result = db.session.execute(sql, {"job_id": job_id})
-    return [dict(row) for row in result]
+    projects = []
+    for row in result:
+        project_dict = {
+            'id': row[0],
+            'name': row[1],
+            'description': row[2],
+            'created_at': row[3],
+            'job_id': row[4]
+        }
+        projects.append(project_dict)
+    return projects
 
 def create_project(job_id: int, name: str, description: str) -> Dict[str, Any]:
     """Create a new project."""
@@ -113,7 +159,14 @@ def create_project(job_id: int, name: str, description: str) -> Dict[str, Any]:
         "created_at": datetime.utcnow()
     })
     db.session.commit()
-    return dict(result.fetchone())
+    row = result.fetchone()
+    return {
+        'id': row[0],
+        'name': row[1],
+        'description': row[2],
+        'created_at': row[3],
+        'job_id': row[4]
+    }
 
 def delete_project(project_id: int, user_id: int) -> bool:
     """Delete a project and all its tasks."""
@@ -154,7 +207,18 @@ def get_task(task_id: int, user_id: int) -> Optional[Dict[str, Any]]:
     """)
     result = db.session.execute(sql, {"task_id": task_id, "user_id": user_id})
     row = result.fetchone()
-    return dict(row) if row else None
+    if row:
+        return {
+            'id': row[0],
+            'name': row[1],
+            'description': row[2],
+            'status': row[3],
+            'due_date': row[4],
+            'created_at': row[5],
+            'project_id': row[6],
+            'job_id': row[7]
+        }
+    return None
 
 def get_tasks(project_id: int) -> List[Dict[str, Any]]:
     """Get all tasks for a project."""
@@ -165,7 +229,20 @@ def get_tasks(project_id: int) -> List[Dict[str, Any]]:
         ORDER BY created_at DESC
     """)
     result = db.session.execute(sql, {"project_id": project_id})
-    return [dict(row) for row in result]
+    tasks = []
+    for row in result:
+        task_dict = {
+            'id': row[0],
+            'name': row[1],
+            'description': row[2],
+            'status': row[3],
+            'due_date': row[4],
+            'created_at': row[5],
+            'project_id': row[6],
+            'job_id': row[7]
+        }
+        tasks.append(task_dict)
+    return tasks
 
 def create_task(project_id: int, title: str, description: str) -> Dict[str, Any]:
     """Create a new task."""
@@ -181,7 +258,17 @@ def create_task(project_id: int, title: str, description: str) -> Dict[str, Any]
         "created_at": datetime.utcnow()
     })
     db.session.commit()
-    return dict(result.fetchone())
+    row = result.fetchone()
+    return {
+        'id': row[0],
+        'name': row[1],
+        'description': row[2],
+        'status': row[3],
+        'due_date': row[4],
+        'created_at': row[5],
+        'project_id': row[6],
+        'job_id': row[7]
+    }
 
 def delete_task(task_id: int, user_id: int) -> bool:
     """Delete a task."""
