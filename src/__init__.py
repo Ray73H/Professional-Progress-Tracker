@@ -8,17 +8,27 @@ from src.models.models import User
 from flask_login import LoginManager
 from .views import views
 from .auth import auth
+from src.seed import seed_example_data
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'devkey123'
-    app.config.from_mapping(
-        SQLALCHEMY_DATABASE_URI=os.getenv("DATABASE_URL"),
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        SECRET_KEY=os.getenv("SECRET_KEY"),
+
+    DB_USER = os.getenv("DB_USER")
+    DB_PASSWORD = os.getenv("DB_PASSWORD")
+    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_PORT = os.getenv("DB_PORT", "5432")
+    DB_NAME = os.getenv("DB_NAME")
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = (
+        f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECRET_KEY'] = 'devkey123'
     
     db.init_app(app)
+
+    with app.app_context():
+        seed_example_data()
     
     login_manager = LoginManager()
     login_manager.init_app(app)

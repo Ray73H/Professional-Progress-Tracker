@@ -14,7 +14,7 @@ def get_jobs(user_id: int) -> List[Job]:
 def create_job(name: str, description: str, position: str, user_id: int) -> Job:
     """Create a new job."""
     job = Job(
-        title=name,
+        name=name,
         description=description,
         position=position,
         user_id=user_id
@@ -74,10 +74,10 @@ def get_tasks(project_id: int) -> List[Task]:
     """Get all tasks for a project."""
     return Task.query.filter_by(project_id=project_id).all()
 
-def create_task(project_id: int, title: str, description: str) -> Task:
+def create_task(project_id: int, name: str, description: str) -> Task:
     """Create a new task."""
     task = Task(
-        title=title,
+        name=name,
         description=description,
         project_id=project_id
     )

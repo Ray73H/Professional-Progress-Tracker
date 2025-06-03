@@ -22,10 +22,10 @@ class Job(db.Model):
     position = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
+
     # Relationships
     projects = db.relationship('Project', backref='job', lazy=True, cascade='all, delete-orphan')
-    tasks = db.relationship('Task', backref='job', lazy=True, cascade='all, delete-orphan')
+
 
 class Project(db.Model):
     __tablename__ = 'projects'
@@ -35,9 +35,10 @@ class Project(db.Model):
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=False)
-    
+
     # Relationships
     tasks = db.relationship('Task', backref='project', lazy=True, cascade='all, delete-orphan')
+
 
 class Task(db.Model):
     __tablename__ = 'tasks'
@@ -48,5 +49,4 @@ class Task(db.Model):
     status = db.Column(db.String(20), default='pending')
     due_date = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    job_id = db.Column(db.Integer, db.ForeignKey('jobs.id'), nullable=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=True) 
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
