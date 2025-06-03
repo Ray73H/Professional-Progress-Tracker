@@ -89,7 +89,7 @@ def add_project(job_id):
     else:
         try:
             create_project(job_id, name, description)
-            flash(f'Project "{name}" added successfully to job "{job.title}"!', 'success')
+            flash(f'Project "{name}" added successfully to job "{job.name}"!', 'success')
         except Exception as e:
             current_app.logger.error(f"Error adding project to job {job_id}: {e}")
             flash('Failed to add project. An unexpected error occurred.', 'danger')
@@ -132,16 +132,16 @@ def add_task(project_id):
         flash('Project not found or not authorized.', 'danger')
         return redirect(request.referrer or url_for('views.dashboard'))
 
-    title = request.form.get('title')
+    name = request.form.get('name')
     description = request.form.get('description', '')
 
-    if not title:
-        flash('Task title is required.', 'warning')
+    if not name:
+        flash('Task Name is required.', 'warning')
         return redirect(url_for('views.view_project', project_id=project_id))
 
     try:
-        create_task(project_id, title, description)
-        flash(f'Task "{title}" added successfully.', 'success')
+        create_task(project_id, name, description)
+        flash(f'Task "{name}" added successfully.', 'success')
     except Exception as e:
         current_app.logger.error(f"Error adding task to project {project_id}: {e}")
         flash('Failed to add task. An unexpected error occurred.', 'danger')
