@@ -10,7 +10,7 @@
 	</button>
 
 	<div class="collapse mb-4" id="addTask">
-		<form method="POST" action="{{ url_for('views.add_task', project_id=project.id) }}">
+		<form method="POST" action="/project/{{ project.id }}/add_task">
 			<div class="mb-3">
 				<label class="form-label">Task/Accomplishment Title</label>
 				<input class="form-control" name="title" required />
@@ -37,7 +37,7 @@
 				</div>
 				<div>
 					<!-- <a href="#" class="btn btn-sm btn-outline-primary">Edit</a> -->
-					<a href="{{ url_for('views.remove_task', task_id=task.id) }}" class="btn btn-sm btn-outline-danger">Delete</a>
+					<a href="/remove_task/{{ task.id }}" class="btn btn-sm btn-outline-danger">Delete</a>
 				</div>
 			</div>
 			{% endfor %}

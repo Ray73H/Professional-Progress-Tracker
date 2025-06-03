@@ -26,7 +26,8 @@ Functions needed:
 @views.route('/')
 @login_required
 def dashboard():
-    user_jobs = get_jobs();
+    #user_jobs = get_jobs();
+    user_jobs = ""
     return render_template("dashboard.html", jobs=user_jobs)
 
 @views.route('/add_job')

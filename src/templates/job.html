@@ -10,7 +10,7 @@
 	</div>
 
 	<div class="collapse mb-4" id="addProject">
-		<form method="POST" action="{{ url_for('views.add_project', job_id=job.id) }}">
+		<form method="POST" action="/job/{{ job.id }}/add_project">
 			<div class="mb-3">
 				<label class="form-label">Project Title</label>
 				<input class="form-control" name="title" required />
@@ -42,10 +42,7 @@
 		<div class="list-group">
 			{% for project in projects %}
 			<div class="list-group-item d-flex justify-content-between align-items-center">
-				<a
-					href="{{ url_for('views.view_project', project_id=project.id) }}"
-					class="text-decoration-none text-dark"
-				>
+				<a href="/project/{{ project.id }}" class="text-decoration-none text-dark">
 					<h5 class="mb-1">{{ project.title }}</h5>
 					{% if project.description %}
 					<small>{{ project.description }}</small>
@@ -57,11 +54,7 @@
 						class="btn btn-sm btn-outline-primary"
 						>Edit</a
 					> -->
-					<a
-						href="{{ url_for('views.remove_project', project_id=project.id) }}"
-						class="btn btn-sm btn-outline-danger"
-						>Delete</a
-					>
+					<a href="/remove_project/{{ project.id }}" class="btn btn-sm btn-outline-danger">Delete</a>
 				</div>
 			</div>
 			{% endfor %}
