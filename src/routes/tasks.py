@@ -3,17 +3,19 @@ from src.database import db
 from src.models.models import Task, Project, Job
 from flask_login import login_required, current_user
 from datetime import datetime
+from sqlalchemy import text, or_
 
 tasks_bp = Blueprint('tasks', __name__)
 
 @tasks_bp.route('/api/tasks', methods=['GET'])
 @login_required
 def get_tasks():
-    """Get tasks with optional filtering"""
+    """Get tasks with optional filtering including regex pattern matching"""
     try:
         # Get query parameters
         job_id = request.args.get('job_id', type=int)
         project_id = request.args.get('project_id', type=int)
+        pattern = request.args.get('pattern', type=str)  # New regex pattern parameter
         
         # Base query joining with Job to check user ownership
         query = Task.query.join(Job, (Job.id == Task.job_id) | 
@@ -25,6 +27,14 @@ def get_tasks():
             query = query.filter(Task.job_id == job_id)
         if project_id:
             query = query.filter(Task.project_id == project_id)
+        
+        # Apply regex pattern if provided
+        if pattern:
+            # Use PostgreSQL's ~* operator for case-insensitive regex matching
+            query = query.filter(or_(
+                text("tasks.name ~* :pattern"),
+                text("tasks.description ~* :pattern")
+            )).params(pattern=pattern)
 
         tasks = query.all()
         return jsonify([{

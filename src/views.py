@@ -41,11 +41,14 @@ def add_job():
     position = request.form.get('position')
 
     if not name or not position:
-        flash('Project name and position is required.', 'warning')
+        flash('Job name and position are required.', 'warning')
     else:
         try:
-            create_job(name, description, position, current_user.id)
-            flash('Job created successfully!', 'success')
+            job = create_job(name, description, position, current_user.id)
+            if job:
+                flash('Job created successfully!', 'success')
+            else:
+                flash('Failed to create job.', 'danger')
         except Exception as e:
             current_app.logger.error(f"Error adding Job: {e}")
             flash('Failed to add job. An unexpected error occurred.', 'danger')
