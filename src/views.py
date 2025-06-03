@@ -1,6 +1,10 @@
 from flask import Blueprint, current_app, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from src.database import db
+from src.database_functions import (
+    get_job, get_jobs, create_job, delete_job,
+    get_project, get_projects, create_project, delete_project,
+    get_task, get_tasks, create_task, delete_task
+)
 
 views = Blueprint('views', __name__)
 
@@ -26,11 +30,10 @@ Functions needed:
 @views.route('/')
 @login_required
 def dashboard():
-    #user_jobs = get_jobs();
-    user_jobs = ""
+    user_jobs = get_jobs(current_user.id)
     return render_template("dashboard.html", jobs=user_jobs)
 
-@views.route('/add_job')
+@views.route('/add_job', methods=['POST'])
 @login_required
 def add_job():
     name = request.form.get('name')
@@ -41,8 +44,8 @@ def add_job():
         flash('Project name and position is required.', 'warning')
     else:
         try:
-            create_job(name, description, position)
-            flash(f'Job created"!', 'success')
+            create_job(name, description, position, current_user.id)
+            flash('Job created successfully!', 'success')
         except Exception as e:
             current_app.logger.error(f"Error adding Job: {e}")
             flash('Failed to add job. An unexpected error occurred.', 'danger')
@@ -52,18 +55,10 @@ def add_job():
 @views.route('/remove_job/<int:job_id>', methods=['GET'])
 @login_required
 def remove_job(job_id):
-    job = get_job(job_id, current_user.id)
-    if not job:
-        flash("Job not found or not authorized.", "danger")
-        return redirect(url_for('views.dashboard'))
-
-    try:
-        delete_job(job_id)
+    if delete_job(job_id, current_user.id):
         flash("Job deleted successfully.", "success")
-    except Exception as e:
-        current_app.logger.error(f"Error deleting job {job_id}: {e}")
-        flash("Failed to delete job. Please try again later.", "danger")
-
+    else:
+        flash("Job not found or not authorized.", "danger")
     return redirect(url_for('views.dashboard'))
 
 ### PROJECTS
@@ -110,14 +105,12 @@ def remove_project(project_id):
         return redirect(request.referrer or url_for('views.dashboard'))
 
     job_id = project.job_id
-    try:
-        delete_project(project_id)
+    if delete_project(project_id, current_user.id):
         flash("Project deleted successfully.", "success")
-    except Exception as e:
-        current_app.logger.error(f"Error deleting project {project_id}: {e}")
+    else:
         flash("Failed to delete project. Please try again later.", "danger")
 
-    return redirect(url_for('views.view_job', job_id=job_id) or url_for('views.dashboard'))
+    return redirect(url_for('views.view_job', job_id=job_id))
 
 ### TASKS
 @views.route('/project/<int:project_id>')
@@ -144,7 +137,7 @@ def add_task(project_id):
 
     if not title:
         flash('Task title is required.', 'warning')
-        return redirect(request.referrer or url_for('views.view_project', project_id=project_id))
+        return redirect(url_for('views.view_project', project_id=project_id))
 
     try:
         create_task(project_id, title, description)
@@ -164,11 +157,9 @@ def remove_task(task_id):
         return redirect(request.referrer or url_for('views.dashboard'))
 
     project_id = task.project_id
-    try:
-        delete_task(task_id)
+    if delete_task(task_id, current_user.id):
         flash("Task deleted successfully.", "success")
-    except Exception as e:
-        current_app.logger.error(f"Error deleting task {task_id}: {e}")
+    else:
         flash("Failed to delete task. Please try again later.", "danger")
 
-    return redirect(url_for('views.view_project', project_id=project_id) or url_for('views.dashboard'))
+    return redirect(url_for('views.view_project', project_id=project_id))
