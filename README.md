@@ -1,6 +1,22 @@
 # Professional-Progress-Tracker
 
-## Steps to run program:
+## Run with docker:
+
+## Run with docker(local database):
+
+Create a new database in pgAdmin. Add these to you .env file
+
+    DB_USER=<postgres_user_name>
+    DB_PASSWORD=<postgres_password>
+    DB_HOST=host.docker.internal
+    DB_PORT=5432
+    DB_NAME=<postgres_database_name>
+
+Run
+
+    docker-compose up --build
+
+## Run program locally:
 
 Create Virtual Environment
 
@@ -16,14 +32,14 @@ Install Dependencies
 
     pip install -r requirements.txt
 
+Create a new database in pgAdmin. Add these to you .env file
+
+    DB_USER=<postgres_user_name>
+    DB_PASSWORD=<postgres_password>
+    DB_HOST=localhost
+    DB_PORT=5432
+    DB_NAME=<postgres_database_name>
+
 Run
 
     python -m src.main
-
-## New: Docker SetupAdd commentMore actions
-
-    docker-compose up --build
-
-Add to .env
-DATABASE_URL=postgresql://postgres:your_password@localhost:5432/progress_tracker_db - need to create a database on pgadmin call progress_tracker_db
-SECRET_KEY=your_secret_key_here
