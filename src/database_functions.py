@@ -49,21 +49,21 @@ def get_jobs(user_id: int) -> List[Dict[str, Any]]:
 def create_job(name: str, description: str, position: str, user_id: int) -> Dict[str, Any]:
     """Create a new job."""
     job = Job(
-        title=name,
+        name=name,
         description=description,
         position=position,
         user_id=user_id
     )
     db.session.add(job)
     db.session.commit()
-    row = result.fetchone()
+    
     return {
-        'id': row[0],
-        'title': row[1],
-        'description': row[2],
-        'position': row[3],
-        'created_at': row[4],
-        'user_id': row[5]
+        'id': job.id,
+        'name': job.name,
+        'description': job.description,
+        'position': job.position,
+        'created_at': job.created_at,
+        'user_id': job.user_id
     }
 
 def delete_job(job_id: int, user_id: int) -> bool:
