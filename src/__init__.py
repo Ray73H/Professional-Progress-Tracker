@@ -8,6 +8,7 @@ from src.models.models import User
 from flask_login import LoginManager
 from .views import views
 from .auth import auth
+from seed import seed_example_data
 
 def create_app():
     app = Flask(__name__)
@@ -15,10 +16,14 @@ def create_app():
     app.config.from_mapping(
         SQLALCHEMY_DATABASE_URI=os.getenv("DATABASE_URL"),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        SECRET_KEY=os.getenv("SECRET_KEY"),
+        SECRET_KEY=os.getenv("SECRET_KEY", "devkey123"),
     )
     
     db.init_app(app)
+
+    with app.app_context():
+        db.create_all()
+        seed_example_data()
     
     login_manager = LoginManager()
     login_manager.init_app(app)
