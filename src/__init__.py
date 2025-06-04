@@ -1,9 +1,6 @@
 import os
 from flask import Flask
 from src.database import db
-from src.routes.jobs import jobs_bp
-from src.routes.projects import projects_bp
-from src.routes.tasks import tasks_bp
 from src.models.models import User
 from flask_login import LoginManager
 from .views import views
@@ -40,8 +37,5 @@ def create_app():
     
     app.register_blueprint(auth)
     app.register_blueprint(views)
-    app.register_blueprint(jobs_bp)
-    app.register_blueprint(projects_bp)
-    app.register_blueprint(tasks_bp)
     
     return app

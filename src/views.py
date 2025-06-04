@@ -1,5 +1,7 @@
 from flask import Blueprint, current_app, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
+from sqlalchemy import text
+from src.database import db
 from src.database_functions import (
     get_job, get_jobs, create_job, delete_job,
     get_project, get_projects, create_project, delete_project,
@@ -98,15 +100,33 @@ def remove_project(project_id):
     return redirect(url_for('views.view_job', job_id=job_id))
 
 ### TASKS
-@views.route('/project/<int:project_id>')
-@login_required
+@views.route("/project/<int:project_id>")
 def view_project(project_id):
+    q = request.args.get("q", "")
     project = get_project(project_id, current_user.id)
     if not project:
         flash('Project not found or not authorized.', 'danger')
         return redirect(request.referrer or url_for('views.dashboard'))
-    
-    tasks = get_tasks(project_id)
+
+    if q:
+        tasks = db.session.execute(
+            text("""
+                SELECT * FROM tasks
+                WHERE project_id = :pid AND name ~* :pattern
+                ORDER BY created_at DESC
+            """),
+            {"pid": project_id, "pattern": q}
+        ).fetchall()
+    else:
+        tasks = db.session.execute(
+            text("""
+                SELECT * FROM tasks
+                WHERE project_id = :pid
+                ORDER BY created_at DESC
+            """),
+            {"pid": project_id}
+        ).fetchall()
+
     return render_template("project.html", project=project, tasks=tasks)
 
 @views.route('/project/<int:project_id>/add_task', methods=['POST'])
