@@ -8,24 +8,6 @@ from src.database_functions import (
 
 views = Blueprint('views', __name__)
 
-"""
-Functions needed:
-    get_job
-    get_jobs
-    create_job
-    delete_job
-
-    get_project
-    get_projects
-    create_project
-    delete_project
-
-    get_tasks
-    get_task
-    create_task
-    delete_task
-"""
-
 ### JOBS
 @views.route('/')
 @login_required
@@ -46,7 +28,7 @@ def add_job():
         try:
             job = create_job(name, description, position, current_user.id)
             if job:
-                flash('Job created successfully!', 'success')
+                flash('Job created successfully.', 'success')
             else:
                 flash('Failed to create job.', 'danger')
         except Exception as e:
@@ -92,7 +74,7 @@ def add_project(job_id):
     else:
         try:
             create_project(job_id, name, description)
-            flash(f'Project "{name}" added successfully to job "{job.name}"!', 'success')
+            flash(f'Project created successfully.', 'success')
         except Exception as e:
             current_app.logger.error(f"Error adding project to job {job_id}: {e}")
             flash('Failed to add project. An unexpected error occurred.', 'danger')
@@ -111,7 +93,7 @@ def remove_project(project_id):
     if delete_project(project_id, current_user.id):
         flash("Project deleted successfully.", "success")
     else:
-        flash("Failed to delete project. Please try again later.", "danger")
+        flash("Project not found or not authorized.", "danger")
 
     return redirect(url_for('views.view_job', job_id=job_id))
 
@@ -144,7 +126,7 @@ def add_task(project_id):
 
     try:
         create_task(project_id, name, description)
-        flash(f'Task "{name}" added successfully.', 'success')
+        flash(f'Task added successfully.', 'success')
     except Exception as e:
         current_app.logger.error(f"Error adding task to project {project_id}: {e}")
         flash('Failed to add task. An unexpected error occurred.', 'danger')
@@ -163,6 +145,6 @@ def remove_task(task_id):
     if delete_task(task_id, current_user.id):
         flash("Task deleted successfully.", "success")
     else:
-        flash("Failed to delete task. Please try again later.", "danger")
+        flash("Task not found or not authorized.", "danger")
 
     return redirect(url_for('views.view_project', project_id=project_id))
