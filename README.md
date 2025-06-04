@@ -2,9 +2,7 @@
 
 ## Run with docker:
 
-## Run with docker(local database):
-
-Create a new database in pgAdmin. Add these to you .env file
+Create a new database in pgAdmin. Add these to your .env file
 
     DB_USER=<postgres_user_name>
     DB_PASSWORD=<postgres_password>
