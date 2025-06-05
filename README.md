@@ -30,7 +30,7 @@ There will be example data loaded into the system automatically under two accoun
 - You can access the job/project by clicking on the title of job/project in the list
 - There is a search bar to search for tasks (regular expression pattern in views.py line 115)
 
-### (Second option to run locally):
+## Second option to run locally:
 
 Create Virtual Environment
 
